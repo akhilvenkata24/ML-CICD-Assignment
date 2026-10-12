@@ -1,0 +1,8 @@
+{
+    "model_name": "Logistic Regression",
+    "dataset_name": "Iris Dataset",
+    "accuracy": 0.9667,
+    "accuracy_percent": "96.67%",
+    "ci_cd_status": "Successful",
+    "updated_at": "2026-10-12 15:06:49 UTC"
+}

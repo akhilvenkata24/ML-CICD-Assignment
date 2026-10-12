@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ML CI/CD Pipeline Dashboard - Iris Logistic Regression</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-primary: #0a0e17;
+      --bg-secondary: #121826;
+      --bg-card: rgba(26, 34, 53, 0.7);
+      --border-color: rgba(255, 255, 255, 0.08);
+      --accent-cyan: #06b6d4;
+      --accent-indigo: #6366f1;
+      --accent-emerald: #10b981;
+      --accent-amber: #f59e0b;
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --text-faint: #64748b;
+      --gradient-brand: linear-gradient(135deg, #06b6d4 0%, #6366f1 50%, #a855f7 100%);
+      --glow-emerald: 0 0 24px rgba(16, 185, 129, 0.35);
+      --glow-card: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: radial-gradient(circle at 15% 20%, rgba(99, 102, 241, 0.15) 0%, transparent 40%),
+                  radial-gradient(circle at 85% 80%, rgba(6, 182, 212, 0.12) 0%, transparent 40%),
+                  var(--bg-primary);
+      color: var(--text-main);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      line-height: 1.6;
+    }
+
+    .container {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 2.5rem 1.5rem;
+      width: 100%;
+    }
+
+    /* Header */
+    header {
+      text-align: center;
+      margin-bottom: 3rem;
+      position: relative;
+    }
+
+    .badge-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.35rem 0.9rem;
+      background: rgba(99, 102, 241, 0.15);
+      border: 1px solid rgba(99, 102, 241, 0.3);
+      border-radius: 9999px;
+      font-size: 0.825rem;
+      font-weight: 600;
+      color: #a5b4fc;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 1rem;
+    }
+
+    h1 {
+      font-size: 2.5rem;
+      font-weight: 800;
+      letter-spacing: -0.025em;
+      background: var(--gradient-brand);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 0.75rem;
+    }
+
+    .subtitle {
+      font-size: 1.1rem;
+      color: var(--text-muted);
+      max-width: 650px;
+      margin: 0 auto;
+    }
+
+    /* Metrics Grid */
+    .metrics-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 1.5rem;
+      margin-bottom: 2.5rem;
+    }
+
+    .metric-card {
+      background: var(--bg-card);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      padding: 1.75rem 1.5rem;
+      box-shadow: var(--glow-card);
+      transition: transform 0.25s ease, border-color 0.25s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .metric-card::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: var(--card-accent, var(--accent-indigo));
+      opacity: 0.8;
+    }
+
+    .metric-card:hover {
+      transform: translateY(-4px);
+      border-color: rgba(255, 255, 255, 0.18);
+    }
+
+    .metric-card.accuracy-card {
+      --card-accent: var(--accent-emerald);
+    }
+
+    .metric-card.status-card {
+      --card-accent: var(--accent-cyan);
+    }
+
+    .card-label {
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--text-muted);
+      font-weight: 600;
+      margin-bottom: 0.75rem;
+    }
+
+    .card-value {
+      font-size: 1.85rem;
+      font-weight: 700;
+      color: var(--text-main);
+      margin-bottom: 0.5rem;
+      line-height: 1.2;
+    }
+
+    .accuracy-number {
+      font-size: 2.4rem;
+      font-weight: 800;
+      color: var(--accent-emerald);
+      text-shadow: 0 0 16px rgba(16, 185, 129, 0.3);
+    }
+
+    .card-subtext {
+      font-size: 0.85rem;
+      color: var(--text-faint);
+    }
+
+    /* Status Indicator */
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.4rem 0.85rem;
+      border-radius: 8px;
+      font-size: 0.95rem;
+      font-weight: 700;
+      background: rgba(16, 185, 129, 0.12);
+      color: #34d399;
+      border: 1px solid rgba(16, 185, 129, 0.3);
+    }
+
+    .status-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background-color: #10b981;
+      box-shadow: 0 0 10px #10b981;
+      animation: pulse-glow 2s infinite ease-in-out;
+    }
+
+    @keyframes pulse-glow {
+      0%, 100% {
+        transform: scale(1);
+        opacity: 1;
+      }
+      50% {
+        transform: scale(1.3);
+        opacity: 0.7;
+      }
+    }
+
+    /* Pipeline Architecture Card */
+    .content-section {
+      background: var(--bg-card);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      padding: 2rem;
+      margin-bottom: 2rem;
+      box-shadow: var(--glow-card);
+    }
+
+    .section-title {
+      font-size: 1.25rem;
+      font-weight: 700;
+      margin-bottom: 1.25rem;
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+    }
+
+    .section-title span {
+      background: var(--gradient-brand);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    /* Pipeline Flow Stepper */
+    .pipeline-steps {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+      margin-top: 1rem;
+    }
+
+    .step-item {
+      flex: 1;
+      min-width: 160px;
+      background: rgba(18, 24, 38, 0.8);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      border-radius: 12px;
+      padding: 1rem;
+      position: relative;
+    }
+
+    .step-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 0.5rem;
+    }
+
+    .step-num {
+      font-size: 0.75rem;
+      font-weight: 700;
+      background: rgba(99, 102, 241, 0.2);
+      color: #818cf8;
+      padding: 0.15rem 0.45rem;
+      border-radius: 4px;
+    }
+
+    .step-status-icon {
+      color: #10b981;
+      font-size: 0.85rem;
+      font-weight: 700;
+    }
+
+    .step-title {
+      font-size: 0.92rem;
+      font-weight: 600;
+      color: var(--text-main);
+      margin-bottom: 0.25rem;
+    }
+
+    .step-desc {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+    }
+
+    /* Meta Table */
+    .meta-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 1rem;
+    }
+
+    .meta-table tr {
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .meta-table tr:last-child {
+      border-bottom: none;
+    }
+
+    .meta-table td {
+      padding: 0.85rem 0.5rem;
+      font-size: 0.9rem;
+    }
+
+    .meta-table td:first-child {
+      color: var(--text-muted);
+      font-weight: 500;
+      width: 35%;
+    }
+
+    .meta-table td:last-child {
+      color: var(--text-main);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.85rem;
+    }
+
+    /* Footer */
+    footer {
+      margin-top: auto;
+      text-align: center;
+      padding: 2rem 1.5rem;
+      border-top: 1px solid var(--border-color);
+      color: var(--text-faint);
+      font-size: 0.85rem;
+    }
+
+    footer a {
+      color: var(--accent-cyan);
+      text-decoration: none;
+    }
+
+    @media (max-width: 640px) {
+      h1 { font-size: 1.85rem; }
+      .container { padding: 1.5rem 1rem; }
+      .metrics-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div class="badge-pill">Autonomous MLOps Pipeline</div>
+      <h1>Machine Learning CI/CD Pipeline</h1>
+      <p class="subtitle">Continuous Integration, Automated Validation & Deployment Dashboard for Machine Learning Models</p>
+    </header>
+
+    <!-- Metrics Cards Grid -->
+    <div class="metrics-grid">
+      <!-- ML Model Name -->
+      <div class="metric-card">
+        <div class="card-label">Machine Learning Model</div>
+        <div class="card-value" id="model-name">Logistic Regression</div>
+        <div class="card-subtext">Multinomial classifier via scikit-learn</div>
+      </div>
+
+      <!-- Dataset Name -->
+      <div class="metric-card">
+        <div class="card-label">Dataset</div>
+        <div class="card-value" id="dataset-name">Iris Dataset</div>
+        <div class="card-subtext">150 samples • 4 features • 3 classes</div>
+      </div>
+
+      <!-- Actual Measured Model Accuracy -->
+      <div class="metric-card accuracy-card">
+        <div class="card-label">Actual Model Accuracy</div>
+        <div class="card-value accuracy-number" id="model-accuracy">96.67%</div>
+        <div class="card-subtext">Measured on stratified 20% test holdout</div>
+      </div>
+
+      <!-- CI/CD Deployment Status -->
+      <div class="metric-card status-card">
+        <div class="card-label">CI/CD Deployment Status</div>
+        <div class="card-value">
+          <span class="status-badge">
+            <span class="status-dot"></span>
+            <span id="ci-cd-status">Successful</span>
+          </span>
+        </div>
+        <div class="card-subtext">Live via GitHub Actions &amp; GitHub Pages</div>
+      </div>
+    </div>
+
+    <!-- CI/CD Pipeline Stages -->
+    <div class="content-section">
+      <div class="section-title">
+        <span>Pipeline Workflow Architecture</span>
+      </div>
+      <div class="pipeline-steps">
+        <div class="step-item">
+          <div class="step-header">
+            <span class="step-num">STAGE 01</span>
+            <span class="step-status-icon">✓ PASS</span>
+          </div>
+          <div class="step-title">Source Checkout</div>
+          <div class="step-desc">GitHub repository pulled via actions/checkout</div>
+        </div>
+
+        <div class="step-item">
+          <div class="step-header">
+            <span class="step-num">STAGE 02</span>
+            <span class="step-status-icon">✓ PASS</span>
+          </div>
+          <div class="step-title">Environment Setup</div>
+          <div class="step-desc">Python 3.12 setup &amp; pip requirements install</div>
+        </div>
+
+        <div class="step-item">
+          <div class="step-header">
+            <span class="step-num">STAGE 03</span>
+            <span class="step-status-icon">✓ PASS</span>
+          </div>
+          <div class="step-title">Model Training (CI)</div>
+          <div class="step-desc">Iris dataset trained &amp; accuracy calculated</div>
+        </div>
+
+        <div class="step-item">
+          <div class="step-header">
+            <span class="step-num">STAGE 04</span>
+            <span class="step-status-icon">✓ PASS</span>
+          </div>
+          <div class="step-title">Pytest Suite (CI)</div>
+          <div class="step-desc">Automated unit &amp; regression tests pass</div>
+        </div>
+
+        <div class="step-item">
+          <div class="step-header">
+            <span class="step-num">STAGE 05</span>
+            <span class="step-status-icon">✓ LIVE</span>
+          </div>
+          <div class="step-title">Deployment (CD)</div>
+          <div class="step-desc">Live dashboard published to GitHub Pages</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Metadata & Specifications -->
+    <div class="content-section">
+      <div class="section-title">
+        <span>Model &amp; Execution Specifications</span>
+      </div>
+      <table class="meta-table">
+        <tbody>
+          <tr>
+            <td>Algorithm Specification</td>
+            <td>LogisticRegression(max_iter=200, random_state=42)</td>
+          </tr>
+          <tr>
+            <td>Evaluation Split</td>
+            <td>Train: 120 samples (80%) | Test: 30 samples (20%, Stratified)</td>
+          </tr>
+          <tr>
+            <td>Feature Dimensions</td>
+            <td>Sepal Length, Sepal Width, Petal Length, Petal Width (4 total)</td>
+          </tr>
+          <tr>
+            <td>Target Class Labels</td>
+            <td>Iris-setosa, Iris-versicolor, Iris-virginica (3 classes)</td>
+          </tr>
+          <tr>
+            <td>Frameworks &amp; Tooling</td>
+            <td>Python 3.12, scikit-learn, pytest, GitHub Actions, GitHub Pages</td>
+          </tr>
+          <tr>
+            <td>Last Pipeline Sync</td>
+            <td id="last-updated">2026-10-12 15:06:49 UTC</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <footer>
+      MLOps CI/CD Assignment Project &bull; Fully Automated Delivery with GitHub Actions &amp; Pages
+    </footer>
+  </div>
+
+  <script>
+    // Asynchronous fetch of latest metrics.json if hosted in production
+    (async function fetchLiveMetrics() {
+      try {
+        const response = await fetch('metrics.json', { cache: 'no-store' });
+        if (response.ok) {
+          const data = await response.json();
+          if (data.accuracy_percent) {
+            document.getElementById('model-accuracy').textContent = data.accuracy_percent;
+          }
+          if (data.ci_cd_status) {
+            document.getElementById('ci-cd-status').textContent = data.ci_cd_status;
+          }
+          if (data.model_name) {
+            document.getElementById('model-name').textContent = data.model_name;
+          }
+          if (data.dataset_name) {
+            document.getElementById('dataset-name').textContent = data.dataset_name;
+          }
+          if (data.updated_at) {
+            document.getElementById('last-updated').textContent = data.updated_at;
+          }
+        }
+      } catch (err) {
+        console.log('Using static embedded metrics.');
+      }
+    })();
+  </script>
+</body>
+</html>
